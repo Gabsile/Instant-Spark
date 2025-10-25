@@ -1,0 +1,67 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f7f7f7;
+}
+
+.App {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #2d6a4f;
+}
+
+input, select, textarea, button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+button {
+  background-color: #2d6a4f;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #1b3d2d;
+}
+
+.dashboard h2 {
+  color: #1b3d2d;
+}
+
+.weather-card {
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.offline {
+  color: #d9534f;
+}
+
+.notification-settings label, .settings label {
+  display: block;
+  margin: 5px 0;
+}
+
+.community-reports, .learning-resources, .settings {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fafafa;
+}
