@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import WeatherCard from "./WeatherCard";
+import WeatherCard from "./WeatherCard.jsx";
 
 const languageCodes = ["en","zu","st","af","xh","tn","ts","ss","ve","nr","nd"];
 
