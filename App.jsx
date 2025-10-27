@@ -1,179 +1,152 @@
 import React, { useState, useEffect } from "react";
-import WeatherCard from "./WeatherCard.jsx";
+import WeatherCard from "./WeatherCard";
+import FarmingTips from "./FarmingTips";
 
-const languageCodes = ["en","zu","st","af","xh","tn","ts","ss","ve","nr","nd"];
-
-function App() {
+export default function App() {
   const [user, setUser] = useState(null);
   const [weather, setWeather] = useState(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [language, setLanguage] = useState(localStorage.getItem("language") || "en");
-  const [notifications, setNotifications] = useState({ push:true, sms:false, email:false });
-  const [reports, setReports] = useState(JSON.parse(localStorage.getItem("reports")||"[]"));
-  const [newReport, setNewReport] = useState({ type:"", description:"", location:"" });
-  const [settings, setSettings] = useState(JSON.parse(localStorage.getItem("settings")||'{"region":"Urban","alertTypes":["storm","flood","drought"]}') );
+  const [tips, setTips] = useState([]);
+  const [language, setLanguage] = useState("en");
+  const [speaking, setSpeaking] = useState(false);
 
-  const resourcesData = [
-    { title: "Climate-Smart Farming Guide", type: "text", link: "#" },
-    { title: "Drought-Resistant Crops Video", type: "video", link: "#" },
-    { title: "Soil Care Infographic", type: "image", link: "#" },
-    { title: "Audio Guide: Irrigation Tips", type: "audio", link: "#" },
+  // South African languages
+  const languages = [
+    { code: "en", name: "English" },
+    { code: "zu", name: "isiZulu" },
+    { code: "xh", name: "isiXhosa" },
+    { code: "af", name: "Afrikaans" },
+    { code: "st", name: "Sesotho" },
+    { code: "tn", name: "Setswana" },
+    { code: "nso", name: "Sepedi" },
+    { code: "ve", name: "Tshivenda" },
+    { code: "ts", name: "Xitsonga" },
+    { code: "nr", name: "isiNdebele" },
+    { code: "ss", name: "Siswati" },
   ];
 
-  const translations = {
-    en: { login:"Login", welcome:"Welcome", offline:"Offline Mode: Cached Data", loading:"Loading weather...", notifications:"Notification Preferences", ussd:"USSD Registration", community:"Community Reports", learning:"Learning & Resources", settings:"Settings" },
-    zu: { login:"Ngena ngemvume", welcome:"Siyakwamukela", offline:"Imodi engaxhunyiwe ku-inthanethi: Idatha egciniwe", loading:"Ilayisha isimo sezulu...", notifications:"Izintandokazi Zezaziso", ussd:"Bhalisa nge-USSD", community:"Izibalo Zomphakathi", learning:"Ukufunda & Izinsiza", settings:"Izilungiselelo" },
-    st: { login:"Kena", welcome:"Rea u amohela", offline:"Mokhoa oa ho se hokahane: Data e bolokiloeng", loading:"E kenya boemo ba leholimo...", notifications:"Likhetho tsa Tsebo", ussd:"Ngoliso ea USSD", community:"Litlhahlobo tsa Sechaba", learning:"Thuto & Lisebelisoa", settings:"Litsamaiso" },
-    af: { login:"Meld aan", welcome:"Welkom", offline:"Vanlyn modus: Gestoorde data", loading:"Laai weerdata...", notifications:"Kennisgewing Voorkeure", ussd:"USSD Registrasie", community:"Gemeenskapsverslae", learning:"Leer & Hulpbronne", settings:"Instellings" },
-    // add other languages as needed
-  };
-
-  const t = translations[language];
-
+  // Detect online/offline
   useEffect(() => {
-    window.addEventListener("online", () => setIsOffline(false));
     window.addEventListener("offline", () => setIsOffline(true));
-    localStorage.setItem("language", language);
-  }, [language]);
+    window.addEventListener("online", () => setIsOffline(false));
+  }, []);
 
-  useEffect(() => { if(user) fetchWeather(); }, [user]);
-
-  const fetchWeather = async () => {
-    if(navigator.onLine){
-      try{
-        const response = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-26.2&longitude=28.0&current_weather=true");
-        const data = await response.json();
-        const weatherData = {...data.current_weather};
-        weatherData.feels_like = (weatherData.temperature - (weatherData.windspeed*0.7)).toFixed(1);
-        weatherData.alert = weatherData.temperature>35 ? "red" : weatherData.temperature>28 ? "yellow" : "green";
-        setWeather(weatherData);
-        localStorage.setItem("weatherData", JSON.stringify(weatherData));
-      } catch { loadOfflineWeather(); }
-    } else loadOfflineWeather();
-  };
-
-  const loadOfflineWeather = () => {
-    const saved = localStorage.getItem("weatherData");
-    if(saved) setWeather(JSON.parse(saved));
-  };
-
-  const handleLogin = (e) => {
+  // Handle login
+  const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
     const phone = e.target.phone.value;
-    setUser({email, phone});
+    const location = e.target.location.value;
+
+    setUser({ email, phone, location });
+    fetchWeather();
+    fetchTips();
   };
 
-  const handleNotificationChange = (e) => {
-    const { name, checked } = e.target;
-    setNotifications({...notifications,[name]:checked});
+  // Fetch weather data
+  const fetchWeather = async () => {
+    try {
+      const res = await fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=-26.2&longitude=28.0&current_weather=true"
+      );
+      const data = await res.json();
+      setWeather(data.current_weather);
+    } catch {
+      setWeather(null);
+    }
   };
 
-  const handleReportSubmit = (e) => {
-    e.preventDefault();
-    if(!newReport.type || !newReport.location) return;
-    const updatedReports = [...reports,{...newReport,date:new Date()}];
-    setReports(updatedReports);
-    localStorage.setItem("reports",JSON.stringify(updatedReports));
-    setNewReport({ type:"", description:"", location:"" });
+  // Example farming tips
+  const fetchTips = async () => {
+    const sampleTips = [
+      { title: "Soil Care", content: "Keep your soil rich with compost and mulch." },
+      { title: "Water Saving", content: "Use drip irrigation to reduce water waste." },
+      { title: "Animal Care", content: "Provide shade and clean water for livestock." },
+    ];
+    setTips(sampleTips);
   };
 
-  const handleSettingsChange = (e) => {
-    const { name, value } = e.target;
-    const updatedSettings = {...settings, [name]: value};
-    setSettings(updatedSettings);
-    localStorage.setItem("settings", JSON.stringify(updatedSettings));
+  // Voice-over using Web Speech API
+  const speak = (text) => {
+    if (!window.speechSynthesis) return alert("Voice feature not supported on this browser.");
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language;
+    setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
   };
 
   return (
-    <div className="App">
-      <h1><i className="fa-solid fa-leaf"></i> AgriGuard</h1>
-      <select value={language} onChange={(e)=>setLanguage(e.target.value)} className="language-select">
-        {languageCodes.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-      </select>
+    <div className="app">
+      <header>
+        <h1>🌾 AgriGuard</h1>
+        <p>Smart Climate & Food Resilience App</p>
+      </header>
+
+      {/* Language Selection */}
+      <div className="language-select">
+        <label>Select Language: </label>
+        <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+          {languages.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {!user ? (
         <form onSubmit={handleLogin}>
-          <h2>{t.login}</h2>
+          <h2>Login</h2>
           <input type="email" name="email" placeholder="Email" required />
           <input type="tel" name="phone" placeholder="Phone Number" required />
-          <button type="submit">{t.login}</button>
+          <input type="text" name="location" placeholder="Location" required />
+          <button type="submit">Login</button>
         </form>
       ) : (
-        <div className="dashboard">
-          <h2>{t.welcome}, {user.email}</h2>
+        <>
+          <h2>Welcome, {user.email}</h2>
 
-          {weather ? <WeatherCard weather={weather}/> : <p>{t.loading}</p>}
-          {isOffline && <p className="offline">{t.offline}</p>}
+          {/* Weather Section */}
+          {weather ? (
+            <WeatherCard weather={weather} />
+          ) : (
+            <p>Loading weather...</p>
+          )}
+          {isOffline && <p className="offline">Offline Mode: Cached Data</p>}
 
-          {/* Notifications */}
-          <div className="notification-settings">
-            <h3>{t.notifications}</h3>
-            <label><input type="checkbox" name="push" checked={notifications.push} onChange={handleNotificationChange}/> Push</label>
-            <label><input type="checkbox" name="sms" checked={notifications.sms} onChange={handleNotificationChange}/> SMS</label>
-            <label><input type="checkbox" name="email" checked={notifications.email} onChange={handleNotificationChange}/> Email</label>
-          </div>
+          {/* Farming Tips */}
+          <section className="tips">
+            <h3>🌱 Farming & Animal Tips</h3>
+            {tips.length ? (
+              tips.map((tip, i) => (
+                <div key={i} className="tip">
+                  <strong>{tip.title}</strong>
+                  <p>{tip.content}</p>
+                  <button
+                    className="speak-btn"
+                    onClick={() => speak(`${tip.title}. ${tip.content}`)}
+                    disabled={speaking}
+                  >
+                    🔊 Listen
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p>Loading farming tips...</p>
+            )}
+          </section>
 
-          {/* USSD */}
-          <div className="ussd-info">
-            <h3>{t.ussd}</h3>
-            <p>Dial <strong>*123#</strong> on your phone to register and receive SMS alerts.</p>
-          </div>
-
-          {/* Community Reports */}
-          <div className="community-reports">
-            <h3>{t.community}</h3>
-            <form onSubmit={handleReportSubmit}>
-              <select value={newReport.type} onChange={(e)=>setNewReport({...newReport,type:e.target.value})} required>
-                <option value="">Select Type</option>
-                <option value="Flood">Flood</option>
-                <option value="Drought">Drought</option>
-                <option value="Crop Disease">Crop Disease</option>
-                <option value="Pest Outbreak">Pest Outbreak</option>
-              </select>
-              <input type="text" placeholder="Location" value={newReport.location} onChange={(e)=>setNewReport({...newReport,location:e.target.value})} required />
-              <textarea placeholder="Description (optional)" value={newReport.description} onChange={(e)=>setNewReport({...newReport,description:e.target.value})}/>
-              <button type="submit">Submit Report</button>
-            </form>
-            <ul>
-              {reports.map((r, idx)=><li key={idx}><strong>{r.type}</strong> at {r.location} ({new Date(r.date).toLocaleString()})</li>)}
-            </ul>
-          </div>
-
-          {/* Learning & Resources */}
-          <div className="learning-resources">
-            <h3>{t.learning}</h3>
-            <ul>
-              {resourcesData.map((res, idx)=>(
-                <li key={idx}>{res.title} [{res.type}] <a href={res.link} target="_blank" rel="noopener noreferrer">View</a></li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Settings */}
-          <div className="settings">
-            <h3>{t.settings}</h3>
-            <label>
-              Region:
-              <select name="region" value={settings.region} onChange={handleSettingsChange}>
-                <option value="Urban">Urban</option>
-                <option value="Rural">Rural</option>
-              </select>
-            </label>
-            <label>
-              Alerts:
-              <select name="alertTypes" value={settings.alertTypes} onChange={handleSettingsChange} multiple>
-                <option value="storm">Storm</option>
-                <option value="flood">Flood</option>
-                <option value="drought">Drought</option>
-              </select>
-            </label>
-          </div>
-        </div>
+          {/* Video Section */}
+          <section className="videos">
+            <h3>🎥 Learning Videos</h3>
+            <video width="320" height="240" controls>
+              <source src="/videos/farming_guide.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </section>
+        </>
       )}
     </div>
   );
 }
-
-export default App;
-
